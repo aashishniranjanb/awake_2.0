@@ -15,6 +15,8 @@ Synthesizable Verilog-2005 RTL for an event-driven agricultural sensor-processin
 
 Sensor contract: `sample_valid` is synchronised by 2 flip-flops and the 48-bit sensor bundle is delayed by the same 2 stages, so sensor data must be held stable for at least 3 clock cycles around a `sample_valid` cycle. Each cycle where `sample_valid` is high while `sensor_en` is set (MONITOR or above) accepts one sample.
 
+The CSA is serialized: one shared multiplier, with the stress score valid 5 clock edges after the sample is accepted. See `docs/CSA_CHECKLIST.md`.
+
 Specifications are in `docs/`. The register contract and reset defaults are in `docs/register_map.md`.
 
 ## Verify (Linux / Codespace, or Windows Git-Bash with oss-cad-suite on PATH)

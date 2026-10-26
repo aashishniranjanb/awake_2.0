@@ -316,23 +316,25 @@ module agrisense_ipms_top(
     // ==========================================
 
     wire [7:0] stress_score_raw;
-    wire csa_capture = domain2_pwr_en && sample_available &&
-                       (sample_accept || !csa_score_valid);
-    wire [7:0] csa_moisture = sample_accept ? moisture_sample : sampled_moisture;
-    wire [7:0] csa_leaf_temp = sample_accept ? leaf_temp_sample : sampled_leaf_temp;
-    wire [7:0] csa_humidity = sample_accept ? humidity_sample : sampled_humidity;
-    wire [7:0] csa_air_temp = sample_accept ? air_temp_sample : sampled_air_temp;
-    wire [7:0] csa_light = sample_accept ? light_sample : sampled_light;
+    // Serialized CSA: operands are the held tuple sampled_*, which updates on the
+    // same edge a sample is accepted, so a start on that edge reads the new
+    // tuple from the next edge on. A held sample is also (re)scored when Domain 2
+    // turns on with no valid score. Weight/shift writes restart a busy CSA.
+    wire csa_busy;
+    wire csa_capture = domain2_pwr_en &&
+                       (sample_accept || (sample_available && !csa_score_valid && !csa_busy));
+    wire csa_cfg_write = m_we && ((m_addr >= 8'h10 && m_addr <= 8'h14) || m_addr == 8'h19);
     crop_stress_accelerator u_csa (
         .clk(clk),
         .rst_n(rst_n),
         .enable(domain2_pwr_en),
         .sample_valid(csa_capture),
-        .moisture(csa_moisture),
-        .leaf_temp(csa_leaf_temp),
-        .humidity(csa_humidity),
-        .air_temp(csa_air_temp),
-        .light(csa_light),
+        .cfg_write(csa_cfg_write),
+        .moisture(sampled_moisture),
+        .leaf_temp(sampled_leaf_temp),
+        .humidity(sampled_humidity),
+        .air_temp(sampled_air_temp),
+        .light(sampled_light),
         
         .w_moisture(w_moisture),
         .w_leaftemp(w_leaftemp),
@@ -343,7 +345,8 @@ module agrisense_ipms_top(
         .shift_factor(normalization_shift),
         
         .stress_score(stress_score_raw),
-        .score_valid(csa_score_valid)
+        .score_valid(csa_score_valid),
+        .busy(csa_busy)
     );
 
     // ==========================================
