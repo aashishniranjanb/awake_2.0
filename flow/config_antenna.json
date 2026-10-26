@@ -1,0 +1,24 @@
+{
+  "DESIGN_NAME": "agrisense_ipms_top",
+  "VERILOG_FILES": [
+    "dir::../rtl/common/*.v",
+    "dir::../rtl/csa/*.v",
+    "dir::../rtl/decde/*.v",
+    "dir::../rtl/dt/*.v",
+    "dir::../rtl/ipm/*.v",
+    "dir::../rtl/sa_adc/*.v",
+    "dir::../rtl/top/*.v"
+  ],
+  "VERILOG_INCLUDE_DIRS": [
+    "dir::../rtl/common"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20.0,
+  "FP_CORE_UTIL": 40,
+  "PL_TARGET_DENSITY_PCT": 50,
+  "RUN_ANTENNA_REPAIR": true,
+  "GRT_ANTENNA_ITERS": 10,
+  "GRT_ANTENNA_MARGIN": 30,
+  "RUN_HEURISTIC_DIODE_INSERTION": true,
+  "DIODE_ON_PORTS": "none"
+}

@@ -51,7 +51,7 @@ module tb_top;
         begin
             @(negedge clk); moisture = m; leaf_temp = lt; sample_valid = 1;
             @(negedge clk); sample_valid = 0;
-            repeat (8) @(negedge clk);
+            repeat (14) @(negedge clk); // 3 sync/accept + 5 CSA + hysteresis
         end
     endtask
 
@@ -118,16 +118,22 @@ module tb_top;
         rd_expect(8'h04, 8'd150);
         rd_expect(8'hA2, 8'd200);
 
-        // sample-to-score coherence: score and held tuple update on the same edge
+        // sample-to-score coherence (serialized CSA): the new score appears exactly
+        // 5 edges after the acceptance edge, equals f(held sample), and the old
+        // score is held (valid low) in between.
         @(negedge clk); moisture = 8'd60; leaf_temp = 8'd60; sample_valid = 1;
         @(negedge clk); sample_valid = 0;
-        for (i = 0; i < 6; i = i + 1) begin
+        while (uut.sampled_moisture !== 8'd60) begin
             @(posedge clk); #1;
-            if (uut.sampled_moisture === 8'd60 && uut.stress_score_raw !== 8'd60)
-                fail("held sample and CSA score out of step");
-            if (uut.sampled_moisture !== 8'd60 && uut.stress_score_raw !== 8'd150)
-                fail("score changed before its sample was accepted");
+            if (uut.stress_score_raw !== 8'd150) fail("score changed before its sample was accepted");
         end
+        for (i = 1; i <= 5; i = i + 1) begin
+            if (i < 5 && uut.csa_score_valid !== 1'b0) fail("score valid before 5-edge latency");
+            if (i < 5 && uut.stress_score_raw !== 8'd150) fail("old score not held while busy");
+            @(posedge clk); #1;
+        end
+        if (uut.csa_score_valid !== 1'b1 || uut.stress_score_raw !== 8'd60)
+            fail("score valid 5 edges after acceptance and equals held sample");
         repeat (4) @(negedge clk);
         expect_state(`IPM_WARNING, "score 60, leaf 60 -> LOW_STRESS -> WARNING");
         if (!d2 || d3 || comm) fail("WARNING: Domain 2 only");

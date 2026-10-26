@@ -1,101 +1,108 @@
+// Serialized Crop Stress Accelerator: one shared 8x8 multiplier.
+//
+// stress_score = min(255, (sum_i s_i * w_i) >> shift_factor), i = 0..4
+//
+// Timing (edge S = clock edge at which a start is sampled):
+//   S       : accumulator cleared, lane index 0, busy=1, score_valid=0
+//   S+1..S+5: lane i = 0..4 product accumulated
+//   S+5     : stress_score loaded (normalized), score_valid=1, busy=0
+// The new score is observable in the cycle after edge S+5 (latency 5 edges).
+//
+// Operands (sensors, weights, shift) are read live during S+1..S+5; they must
+// be stable for the computation. Restart rules guarantee that each result
+// uses one coherent operand set:
+//   start   = sample_valid | (cfg_write & busy)  -> (re)starts at index 0
+//   enable=0 aborts: busy=0, score_valid=0 (highest priority)
+// A restart on the final edge wins over completion. An idle cfg_write does not
+// recompute (score keeps reflecting the configuration at its computation).
+// stress_score holds its previous value until the next completion.
+// Accumulator: 5 * 255 * 255 = 325,125 < 2^19.
+
 module crop_stress_accelerator(
     input wire        clk,
     input wire        rst_n,
     input wire        enable,
     input wire        sample_valid,
+    input wire        cfg_write,
     input wire [7:0]  moisture,
     input wire [7:0]  leaf_temp,
     input wire [7:0]  humidity,
     input wire [7:0]  air_temp,
     input wire [7:0]  light,
-    
+
     input wire [7:0]  w_moisture,
     input wire [7:0]  w_leaftemp,
     input wire [7:0]  w_humidity,
     input wire [7:0]  w_airtemp,
     input wire [7:0]  w_light,
-    
+
     input wire [3:0]  shift_factor,
-    
-    output wire [7:0] stress_score,
-    output reg        score_valid
+
+    output reg  [7:0] stress_score,
+    output reg        score_valid,
+    output reg        busy
 );
 
-    wire [15:0] p_moisture;
-    wire [15:0] p_leaftemp;
-    wire [15:0] p_humidity;
-    wire [15:0] p_airtemp;
-    wire [15:0] p_light;
+    reg [2:0]  lane;
+    reg [18:0] acc;
 
-    weighted_sum ws_moisture (
-        .sensor_value(moisture),
-        .weight(w_moisture),
-        .product(p_moisture)
-    );
-
-    weighted_sum ws_leaftemp (
-        .sensor_value(leaf_temp),
-        .weight(w_leaftemp),
-        .product(p_leaftemp)
-    );
-
-    weighted_sum ws_humidity (
-        .sensor_value(humidity),
-        .weight(w_humidity),
-        .product(p_humidity)
-    );
-
-    weighted_sum ws_airtemp (
-        .sensor_value(air_temp),
-        .weight(w_airtemp),
-        .product(p_airtemp)
-    );
-
-    weighted_sum ws_light (
-        .sensor_value(light),
-        .weight(w_light),
-        .product(p_light)
-    );
-
-    // Balanced combinational sum of weighted products.
-    // Explicit widths preserve the full unsigned sum of five 16-bit products.
-    wire [16:0] weighted_pair_01;
-    wire [16:0] weighted_pair_23;
-    wire [17:0] weighted_pair_0123;
-    wire [18:0] weighted_sum_val_comb;
-
-    assign weighted_pair_01   = {1'b0, p_moisture} + {1'b0, p_leaftemp};
-    assign weighted_pair_23   = {1'b0, p_humidity} + {1'b0, p_airtemp};
-    assign weighted_pair_0123 = {1'b0, weighted_pair_01} + {1'b0, weighted_pair_23};
-    assign weighted_sum_val_comb = {1'b0, weighted_pair_0123} + {3'b0, p_light};
-
-    // One-cycle pipeline register to break the adder-tree critical path
-    reg [18:0] weighted_sum_val_reg;
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            weighted_sum_val_reg <= 19'd0;
-        else if (enable && sample_valid)
-            weighted_sum_val_reg <= weighted_sum_val_comb;
+    reg [7:0] s_op;
+    reg [7:0] w_op;
+    always @(*) begin
+        case (lane)
+            3'd0:    begin s_op = moisture;  w_op = w_moisture; end
+            3'd1:    begin s_op = leaf_temp; w_op = w_leaftemp; end
+            3'd2:    begin s_op = humidity;  w_op = w_humidity; end
+            3'd3:    begin s_op = air_temp;  w_op = w_airtemp;  end
+            default: begin s_op = light;     w_op = w_light;    end
+        endcase
     end
 
-    reg [3:0] shift_factor_reg;
+    wire [15:0] product;
+    weighted_sum ws_shared (
+        .sensor_value(s_op),
+        .weight(w_op),
+        .product(product)
+    );
+
+    wire [18:0] acc_next = acc + {3'b000, product};
+
+    wire [7:0] score_next;
+    normalization_unit norm_inst (
+        .weighted_sum_val(acc_next),
+        .shift_factor(shift_factor),
+        .stress_score(score_next)
+    );
+
+    wire start = sample_valid | (cfg_write & busy);
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            shift_factor_reg <= 4'd0;
-            score_valid <= 1'b0;
+            lane         <= 3'd0;
+            acc          <= 19'd0;
+            busy         <= 1'b0;
+            score_valid  <= 1'b0;
+            stress_score <= 8'd0;
         end else if (!enable) begin
+            busy        <= 1'b0;
             score_valid <= 1'b0;
-        end else if (sample_valid) begin
-            shift_factor_reg <= shift_factor;
-            score_valid <= 1'b1;
+            lane        <= 3'd0;
+        end else if (start) begin
+            lane        <= 3'd0;
+            acc         <= 19'd0;
+            busy        <= 1'b1;
+            score_valid <= 1'b0;
+        end else if (busy) begin
+            if (lane == 3'd4) begin
+                stress_score <= score_next;
+                score_valid  <= 1'b1;
+                busy         <= 1'b0;
+                lane         <= 3'd0;
+            end else begin
+                acc  <= acc_next;
+                lane <= lane + 3'd1;
+            end
         end
     end
-
-    // Instantiate range-check/normalization block using the registered sum
-    normalization_unit norm_inst (
-        .weighted_sum_val(weighted_sum_val_reg),
-        .shift_factor(shift_factor_reg),
-        .stress_score(stress_score)
-    );
 
 endmodule
