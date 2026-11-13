@@ -1,0 +1,13 @@
+STATE=WARNING
+PASS state=00 time=180000
+PASS state=01 time=300000
+PASS state=11 time=2700000
+PASS state=10 time=3020000
+PASS state=10 time=3020000
+VCD info: dumpfile /workspaces/awake_2.0/runs/workload-power-v1/simulation/warning.vcd opened for output.
+PASS state=10 time=7020000
+MEASUREMENT_START WARNING 7020000
+PASS state=10 time=27020000
+MEASUREMENT_END WARNING 27020000
+PASS STATE=WARNING
+runs/workload-power-v1/simulation/tb_power_state.v:201: $finish called at 27020000 (1ps)

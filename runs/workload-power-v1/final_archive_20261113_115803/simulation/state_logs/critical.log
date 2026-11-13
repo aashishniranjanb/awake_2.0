@@ -1,0 +1,12 @@
+STATE=CRITICAL
+PASS state=00 time=180000
+PASS state=01 time=300000
+PASS state=11 time=2700000
+PASS state=11 time=2700000
+VCD info: dumpfile /workspaces/awake_2.0/runs/workload-power-v1/simulation/critical.vcd opened for output.
+PASS state=11 time=6700000
+MEASUREMENT_START CRITICAL 6700000
+PASS state=11 time=26700000
+MEASUREMENT_END CRITICAL 26700000
+PASS STATE=CRITICAL
+runs/workload-power-v1/simulation/tb_power_state.v:201: $finish called at 26700000 (1ps)

@@ -1,0 +1,17 @@
+AWAKE 2.0 - POWER CHARACTERIZATION ARCHIVE
+Archive timestamp: 20261113_115803
+Project root: /workspaces/awake_2.0
+Git branch: opt/csa-serial
+Git commit: 29c78eb1a95ed08f1adb52964c188d5ea443f29a
+
+CLOCK: 50 MHz
+PERIOD: 20 ns
+LIBRARY: SKY130 HD
+CORNER: TT
+TEMPERATURE: 25 C
+VOLTAGE: 1.80 V
+PARASITICS: Nominal extracted SPEF
+NETLIST: Final signoff-repair-v2
+
+OPENROAD:
+edf00dff99f6c40d67a30c0e22a8191c5d2ed9d6 

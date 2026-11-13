@@ -1,0 +1,10 @@
+STATE=SLEEP
+PASS state=00 time=180000
+PASS state=00 time=180000
+VCD info: dumpfile /workspaces/awake_2.0/runs/workload-power-v1/simulation/sleep.vcd opened for output.
+PASS state=00 time=4180000
+MEASUREMENT_START SLEEP 4180000
+PASS state=00 time=24180000
+MEASUREMENT_END SLEEP 24180000
+PASS STATE=SLEEP
+runs/workload-power-v1/simulation/tb_power_state.v:201: $finish called at 24180000 (1ps)
