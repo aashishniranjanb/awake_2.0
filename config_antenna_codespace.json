@@ -1,0 +1,37 @@
+{
+  "DESIGN_NAME": "agrisense_ipms_top",
+  "VERILOG_FILES": [
+    "/workspaces/awake_2.0/rtl/common/isolation_cell.v",
+    "/workspaces/awake_2.0/rtl/common/reg_bus_interconnect.v",
+    "/workspaces/awake_2.0/rtl/common/register_file.v",
+    "/workspaces/awake_2.0/rtl/common/sample_bus_pipeline.v",
+    "/workspaces/awake_2.0/rtl/common/synchronizer.v",
+    "/workspaces/awake_2.0/rtl/csa/crop_stress_accelerator.v",
+    "/workspaces/awake_2.0/rtl/csa/normalization_unit.v",
+    "/workspaces/awake_2.0/rtl/csa/weighted_sum.v",
+    "/workspaces/awake_2.0/rtl/decde/crossover_detector.v",
+    "/workspaces/awake_2.0/rtl/decde/decde_channel.v",
+    "/workspaces/awake_2.0/rtl/decde/ema_filter.v",
+    "/workspaces/awake_2.0/rtl/decde/fusion_unit.v",
+    "/workspaces/awake_2.0/rtl/dt/decision_tree_accelerator.v",
+    "/workspaces/awake_2.0/rtl/ipm/ipm_fsm.v",
+    "/workspaces/awake_2.0/rtl/ipm/power_controller.v",
+    "/workspaces/awake_2.0/rtl/ipm/wake_controller.v",
+    "/workspaces/awake_2.0/rtl/sa_adc/sa_adc_controller.v",
+    "/workspaces/awake_2.0/rtl/top/agrisense_ipms_top.v"
+  ],
+  "VERILOG_INCLUDE_DIRS": [
+    "/workspaces/awake_2.0/rtl/common"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20.0,
+  "FP_CORE_UTIL": 40,
+  "PL_TARGET_DENSITY_PCT": 50,
+  "RUN_ANTENNA_REPAIR": true,
+  "GRT_ANTENNA_ITERS": 10,
+  "GRT_ANTENNA_MARGIN": 30,
+  "RUN_HEURISTIC_DIODE_INSERTION": true,
+  "DIODE_ON_PORTS": "none",
+  "PDK": "sky130A",
+  "STD_CELL_LIBRARY": "sky130_fd_sc_hd"
+}

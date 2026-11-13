@@ -1,0 +1,11 @@
+STATE=MONITOR
+PASS state=00 time=180000
+PASS state=01 time=300000
+PASS state=01 time=620000
+VCD info: dumpfile /workspaces/awake_2.0/runs/workload-power-v1/simulation/monitor.vcd opened for output.
+PASS state=01 time=4620000
+MEASUREMENT_START MONITOR 4620000
+PASS state=01 time=24620000
+MEASUREMENT_END MONITOR 24620000
+PASS STATE=MONITOR
+runs/workload-power-v1/simulation/tb_power_state.v:201: $finish called at 24620000 (1ps)

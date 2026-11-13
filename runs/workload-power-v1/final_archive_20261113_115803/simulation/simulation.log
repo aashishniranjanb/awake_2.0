@@ -1,0 +1,21 @@
+VCD info: dumpfile runs/workload-power-v1/simulation/workload.vcd opened for output.
+==============================================
+ AWAKE GATE-LEVEL WORKLOAD POWER SIMULATION
+ Clock period: 20 ns / 50 MHz
+==============================================
+STATE_CHANGE time=1000 state=00 D2=x D3=x COMM=x
+PASS: Reset to SLEEP state=00 time=180000
+PASS: Remain in SLEEP state=00 time=900000
+STATE_CHANGE time=971000 state=01 D2=0 D3=0 COMM=0
+PASS: Wake to MONITOR state=01 time=1020000
+STATE_CHANGE time=2591000 state=10 D2=0 D3=0 COMM=0
+STATE_CHANGE time=3291000 state=11 D2=1 D3=0 COMM=0
+PASS: Escalation to CRITICAL state=11 time=3420000
+STATE_CHANGE time=3611000 state=10 D2=1 D3=1 COMM=1
+PASS: Recovery to WARNING state=10 time=3740000
+STATE_CHANGE time=3951000 state=01 D2=1 D3=0 COMM=0
+PASS: Recovery to MONITOR state=01 time=4060000
+STATE_CHANGE time=6701000 state=00 D2=0 D3=0 COMM=0
+PASS: Reset during activity state=00 time=6760000
+WORKLOAD TEST PASSED
+runs/workload-power-v1/simulation/tb_power_workload.v:228: $finish called at 6960000 (1ps)
